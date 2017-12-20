@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Generate thumbnails from images in S3
+Parameters:
+  BucketName:
+    Description: Name of S3 Bucket
+    Type: "String"
+Resources:
+  GoFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      CodeUri: s3://khk-us-east-1/demos/serverless-app-repo/lambda-s3-thumbnail.zip
+      Handler: handler.Handle
+      Runtime: python2.7
+      Timeout: 300
+      Events:
+        S3Upload:
+          Type: S3
+          Properties:
+            Bucket: !Ref BucketName
+            Events: s3:ObjectCreated:*
