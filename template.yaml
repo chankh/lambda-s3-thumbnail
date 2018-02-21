@@ -10,8 +10,8 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       CodeUri: s3://khk-us-east-1/demos/serverless-app-repo/lambda-s3-thumbnail.zip
-      Handler: handler.Handle
-      Runtime: python2.7
+      Handler: main
+      Runtime: go1.x
       Timeout: 300
       Events:
         S3Event:

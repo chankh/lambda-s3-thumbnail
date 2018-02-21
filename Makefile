@@ -25,36 +25,26 @@
 # For more information, please refer to <http://unlicense.org/>
 #
 
-HANDLER ?= handler
+HANDLER ?= main
 PACKAGE ?= $(HANDLER)
 GOPATH  ?= $(HOME)/go
+GOOS    ?= linux
+GOARCH  ?= amd64
 
 WORKDIR = $(CURDIR:$(GOPATH)%=/go%)
 ifeq ($(WORKDIR),$(CURDIR))
 	WORKDIR = /tmp
 endif
 
-docker:
-	@docker run --rm                                                             \
-	  -e HANDLER=$(HANDLER)                                                      \
-	  -e PACKAGE=$(PACKAGE)                                                      \
-	  -v $(GOPATH):/go                                                           \
-	  -v $(CURDIR):/tmp                                                          \
-	  -w $(WORKDIR)                                                              \
-	  eawsy/aws-lambda-go-shim:latest make all
-
-all: build pack perm
+all: build pack 
 
 build:
-	@go build -buildmode=plugin -ldflags='-w -s' -o $(HANDLER).so
+	@GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='-w -s' -o $(HANDLER)
 
 pack:
-	@pack $(HANDLER) $(HANDLER).so $(PACKAGE).zip
-
-perm:
-	@chown $(shell stat -c '%u:%g' .) $(HANDLER).so $(PACKAGE).zip
+	@zip $(PACKAGE).zip $(HANDLER)
 
 clean:
-	@rm -rf $(HANDLER) $(HANDLER).so $(PACKAGE).zip
+	@rm -rf $(HANDLER) $(PACKAGE).zip
 
-.PHONY: docker all build pack perm clean
+.PHONY: all build pack clean

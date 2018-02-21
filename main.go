@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"image/color"
@@ -8,13 +9,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/disintegration/imaging"
-	"github.com/eawsy/aws-lambda-go-core/service/lambda/runtime"
-	"github.com/eawsy/aws-lambda-go-event/service/lambda/runtime/event/s3evt"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -30,9 +31,8 @@ var uploader = s3manager.NewUploader(sess)
 // Create a downloader with session and default option
 var downloader = s3manager.NewDownloader(sess)
 
-func Handle(req *s3evt.Event, ctx *runtime.Context) (string, error) {
+func handle(ctx context.Context, req events.S3Event) (string, error) {
 	log.SetOutput(os.Stdout)
-	fmt.Printf("%v", req)
 	log.Infof("%v", req)
 	for _, r := range req.Records {
 		if key := r.S3.Object.Key; isImage(key) {
@@ -138,33 +138,6 @@ func isImage(name string) bool {
 	return false
 }
 
-type S3Request struct {
-	records []S3Record `json:"Records"`
-}
-
-type S3Record struct {
-	eventVersion string `json:"eventVersion"`
-	eventTime    string `json:"eventTime"`
-	s3           S3     `json:"s3"`
-	awsRegion    string `json:"awsRegion"`
-	eventName    string `json:"eventName"`
-	eventSource  string `json:"eventSource"`
-}
-
-type S3 struct {
-	object          S3Object `json:"object"`
-	bucket          S3Bucket `json:"bucket"`
-	s3SchemaVersion string   `json:"s3SchemaVersion"`
-}
-
-type S3Object struct {
-	eTag      string `json:"eTag"`
-	sequencer string `json:"sequencer"`
-	key       string `json:"key"`
-	size      int64  `json:"size"`
-}
-
-type S3Bucket struct {
-	arn  string `json:"arn"`
-	name string `json:"name"`
+func main() {
+	lambda.Start(handle)
 }
